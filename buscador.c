@@ -1,13 +1,16 @@
 #include <stdlib.h>
 #include <string.h>
-#include "buscador.h"
+#include "buscador.h" 
 
+/* MAX_RESULTADOS = MAX_RECEITAS de receita.c. Os demais espelham os limites de texto de receita.c:
+ * se aumentarem la, aumentar aqui (senao nomes sao truncados e a comparacao falha). */
 #define MAX_RESULTADOS 50
 #define MAX_TITULO_RES 60
 #define MAX_PREPARO_RES 500
 #define MAX_NOME_BUSCA 50
 #define MAX_UNIDADE_BUSCA 15
 
+/* A lista guarda COPIAS so do titulo e do modo de preparo (o que o main imprime) */
 typedef struct {
     char titulo[MAX_TITULO_RES];
     char modoPreparo[MAX_PREPARO_RES];
@@ -18,6 +21,8 @@ struct lista_receitas {
     int total;
 };
 
+/* Retorna 1 se TODOS os ingredientes da receita 'indiceReceita' (posicao no catalogo) estao
+ * disponiveis na despensa; 0 se algum falhar ou se a receita nao tiver ingredientes. */
 static int receitaEhViavel(Despensa* d, CatalogoReceitas* cat, int indiceReceita) {
     int qtdIngredientes = obterQtdIngredientesReceita(cat, indiceReceita);
     if (qtdIngredientes <= 0) {
@@ -33,6 +38,7 @@ static int receitaEhViavel(Despensa* d, CatalogoReceitas* cat, int indiceReceita
         if (ret != COND_OK) {
             return 0;
         }
+        /* A regra nome/unidade/quantidade fica no modulo Ingrediente; aqui so se pergunta */
         if (verificarDisponibilidadeIngrediente(d, nomeIng, qtdNecessaria, unidadeIng) == 0) {
             return 0;
         }
@@ -51,6 +57,7 @@ ListaReceitas* buscarReceitasCompativeis(Despensa* d, CatalogoReceitas* cat, int
     }
     lista->total = 0;
 
+    /* d ou cat NULL: devolve lista vazia (e nao NULL) */
     if (d == NULL || cat == NULL) {
         if (totalEncontradas != NULL) {
             *totalEncontradas = 0;
@@ -64,6 +71,7 @@ ListaReceitas* buscarReceitasCompativeis(Despensa* d, CatalogoReceitas* cat, int
             const char* titulo = obterTituloReceita(cat, i);
             const char* preparo = obterModoPreparoReceita(cat, i);
 
+            /* Copia os textos: a lista continua valida mesmo se o catalogo mudar depois */
             if (titulo != NULL && preparo != NULL) {
                 strncpy(lista->itens[lista->total].titulo, titulo, MAX_TITULO_RES - 1);
                 lista->itens[lista->total].titulo[MAX_TITULO_RES - 1] = '\0';

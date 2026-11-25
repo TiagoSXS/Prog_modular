@@ -3,13 +3,17 @@
 #include <string.h>
 #include "receita.h"
 
+/* ATENCAO: alterar MAX_* ou os campos das structs torna incompativeis os .bin ja salvos
+ * (salvarCatalogo grava a struct crua). MAX_NOME_ING e MAX_UNIDADE_ING devem ser iguais aos
+ * de ingrediente.c e aos buffers de buscador.c e main.c (senao nomes sao truncados). */
 #define MAX_TITULO 60
-#define MAX_PREPARO 500
+#define MAX_PREPARO 500 
 #define MAX_NOME_ING 50
 #define MAX_UNIDADE_ING 15
 #define MAX_INGREDIENTES_REC 15
 #define MAX_RECEITAS 50
 
+/* Um ingrediente exigido por uma receita */
 typedef struct {
     char nome[MAX_NOME_ING];
     float quantidadeNecessaria;
@@ -28,6 +32,7 @@ struct catalogo_receitas {
     int totalReceitas;
 };
 
+/* Retorna a posicao da receita de titulo igual (comparacao exata) ou -1 se nao existir */
 static int buscarIndiceReceita(CatalogoReceitas* cat, const char* titulo) {
     for (int i = 0; i < cat->totalReceitas; i++) {
         if (strcmp(cat->lista[i].titulo, titulo) == 0) {
@@ -119,6 +124,7 @@ tpCondRet removerReceita(CatalogoReceitas* cat, const char* titulo) {
         return COND_NAO_ENCONTRADO;
     }
 
+    /* Desloca as receitas seguintes uma posicao para fechar o buraco */
     for (int i = idx; i < cat->totalReceitas - 1; i++) {
         cat->lista[i] = cat->lista[i + 1];
     }
@@ -181,6 +187,7 @@ tpCondRet obterIngredienteDaReceita(CatalogoReceitas* cat, int indiceReceita, in
     return COND_OK;
 }
 
+/* Formato do arquivo: [int totalReceitas][Receita x totalReceitas] */
 tpCondRet salvarCatalogo(CatalogoReceitas* cat, const char* caminhoArquivo) {
     if (cat == NULL || caminhoArquivo == NULL) {
         return COND_PARAMETRO_INVALIDO;
@@ -217,6 +224,7 @@ tpCondRet carregarCatalogo(CatalogoReceitas* cat, const char* caminhoArquivo) {
         return COND_ERRO_ARQUIVO;
     }
 
+    /* Valida o total lido antes de usar, para nao estourar o array lista[] */
     int total = 0;
     if (fread(&total, sizeof(int), 1, fp) != 1 || total < 0 || total > MAX_RECEITAS) {
         fclose(fp);

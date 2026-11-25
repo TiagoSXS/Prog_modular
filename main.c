@@ -1,18 +1,24 @@
+/* Programa principal: menu de terminal. Unico modulo que fala com o usuario (scanf/printf).
+ * Compilar (todos os modulos, sem os arquivos de teste):
+ *   gcc -Wall -o programa main.c ingrediente.c receita.c buscador.c */
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #include "ingrediente.h"
-#include "receita.h"
+#include "receita.h" 
 #include "buscador.h"
 
+/* Arquivos de dados, criados na pasta onde o programa e executado */
 #define ARQ_DESPENSA "despensa.bin"
-#define ARQ_RECEITAS "receitas.bin"
+#define ARQ_RECEITAS "receitas.bin" 
 
+/* Descarta o que sobrou na linha digitada (usar apos scanf) */
 static void limparBuffer(void) {
     int c;
     while ((c = getchar()) != '\n' && c != EOF);
 }
 
+/* Le uma linha com espacos e remove o '\n'. tamanho = tamanho do buffer 'destino' */
 static void lerTexto(char* destino, int tamanho) {
     if (fgets(destino, tamanho, stdin) != NULL) {
         size_t len = strlen(destino);
@@ -71,10 +77,12 @@ int main(void) {
     Despensa* despensa = criarDespensa();
     CatalogoReceitas* catalogo = criarCatalogo();
 
+    /* Retorno ignorado: na primeira execucao os .bin ainda nao existem */
     carregarDespensa(despensa, ARQ_DESPENSA);
     carregarCatalogo(catalogo, ARQ_RECEITAS);
 
     int opcao = -1;
+    /* Tamanhos dos buffers = limites dos modulos (nome 50, unidade 15, titulo 60, preparo 500) */
     char nomeBusca[50], novoNome[50], unidade[15];
     char titulo[60], preparo[500];
     float quantidade = 0.0f;
@@ -97,6 +105,7 @@ int main(void) {
         }
         limparBuffer();
 
+        /* 1: adicionar ingrediente (soma se ja existir com a mesma unidade) */
         if (opcao == 1) {
             printf("Nome do ingrediente: ");
             lerTexto(novoNome, sizeof(novoNome));
@@ -115,6 +124,7 @@ int main(void) {
             } else {
                 printf("Erro: dados invalidos ou ingrediente ja existe com outra unidade.\n");
             }
+        /* 2: editar ingrediente (troca nome, quantidade e unidade de uma vez) */
         } else if (opcao == 2) {
             printf("Nome do ingrediente que deseja editar: ");
             lerTexto(nomeBusca, sizeof(nomeBusca));
@@ -138,6 +148,7 @@ int main(void) {
             } else {
                 printf("Erro: Dados invalidos para edicao.\n");
             }
+        /* 3: remover ingrediente pelo nome */
         } else if (opcao == 3) {
             printf("Nome do ingrediente para remover: ");
             lerTexto(nomeBusca, sizeof(nomeBusca));
@@ -147,6 +158,9 @@ int main(void) {
             } else {
                 printf("Erro: Ingrediente nao encontrado.\n");
             }
+        /* 4: cadastrar receita. Cria a receita vazia e depois adiciona cada ingrediente pelo titulo.
+         * NOTA: se o numero de ingredientes for invalido, a receita ja foi criada e fica sem ingredientes
+         * (o Buscador a ignora); o retorno de adicionarIngredienteNaReceita nao e verificado. */
         } else if (opcao == 4) {
             int qtdIng = 0;
             printf("Titulo da receita: ");
@@ -182,6 +196,7 @@ int main(void) {
                 adicionarIngredienteNaReceita(catalogo, titulo, novoNome, quantidade, unidade);
             }
             printf("Receita cadastrada com sucesso!\n");
+        /* 5: buscar receitas compativeis (a lista devolvida e alocada: sempre destruir ao final) */
         } else if (opcao == 5) {
             int totalEncontradas = 0;
             ListaReceitas* sugeridas = buscarReceitasCompativeis(despensa, catalogo, &totalEncontradas);
@@ -199,6 +214,7 @@ int main(void) {
             listarTodasReceitas(catalogo);
         } else if (opcao == 7) {
             listarTodosIngredientes(despensa);
+        /* 0: unico momento em que os dados sao gravados em arquivo */
         } else if (opcao == 0) {
             salvarDespensa(despensa, ARQ_DESPENSA);
             salvarCatalogo(catalogo, ARQ_RECEITAS);

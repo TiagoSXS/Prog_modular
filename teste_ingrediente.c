@@ -1,3 +1,6 @@
+/* Testes unitarios do modulo Ingrediente (usa o ingrediente.c real).
+ * Compilar: gcc -Wall -o teste_ingrediente teste_ingrediente.c ingrediente.c
+ * O teste 3 cria o arquivo teste_despensa.bin na pasta atual. */
 #include <stdio.h>
 #include "ingrediente.h"
 
@@ -14,9 +17,10 @@ static int testar_RemoverIngrediente_Inexistente(void) {
     adicionarIngrediente(d, "Sal", 500.0f, "g");
     tpCondRet ret = removerIngrediente(d, "Acucar");
     destruirDespensa(d);
-    return (ret == COND_NAO_ENCONTRADO);
+    return (ret == COND_NAO_ENCONTRADO); 
 }
 
+/* Edita um item, salva em arquivo, carrega em outra despensa e confere o item editado */
 static int testar_Editar_E_Persistencia(void) {
     Despensa* d1 = criarDespensa();
     adicionarIngrediente(d1, "Leite", 1000.0f, "ml");
@@ -32,6 +36,7 @@ static int testar_Editar_E_Persistencia(void) {
     return (retEdit == COND_OK && retSave == COND_OK && retLoad == COND_OK && achouEditado == 1);
 }
 
+/* 1 kg na despensa NAO atende 500 g: nao ha conversao de unidades */
 static int testar_UnidadeDivergente_Recusada(void) {
     Despensa* d = criarDespensa();
     adicionarIngrediente(d, "Farinha", 1.0f, "kg");
@@ -40,6 +45,7 @@ static int testar_UnidadeDivergente_Recusada(void) {
     return (disponivel == 0);
 }
 
+/* Mesmo nome e unidade soma (2 + 1 = 3, um unico item); mesmo nome com outra unidade e recusado */
 static int testar_AdicionarIngrediente_Acumulativo(void) {
     Despensa* d = criarDespensa();
     adicionarIngrediente(d, "Ovo", 2.0f, "un");
@@ -53,6 +59,7 @@ static int testar_AdicionarIngrediente_Acumulativo(void) {
     return (totalItens == 1 && temTres == 1 && retUnidadeDiferente == COND_PARAMETRO_INVALIDO);
 }
 
+/* So imprime o resultado: o programa retorna 0 mesmo se algum teste falhar */
 int main(void) {
     printf("=== TESTES UNITARIOS: MODULO INGREDIENTE ===\n");
     printf("1. Editar Inexistente:        %s\n", testar_EditarIngrediente_Inexistente() ? "PASSOU" : "FALHOU");

@@ -3,11 +3,14 @@
 #include <string.h>
 #include "ingrediente.h"
 
+/* ATENCAO: alterar MAX_* ou os campos de ItemIngrediente torna incompativeis os .bin ja salvos
+ * (salvarDespensa grava a struct crua). Manter MAX_NOME e MAX_UNIDADE iguais aos buffers
+ * de receita.c, buscador.c e main.c. */
 #define MAX_NOME 50
 #define MAX_UNIDADE 15
 #define MAX_ITENS 100
 
-typedef struct {
+typedef struct { 
     char nome[MAX_NOME];
     float quantidade;
     char unidade[MAX_UNIDADE];
@@ -40,6 +43,7 @@ tpCondRet adicionarIngrediente(Despensa* d, const char* nome, float qtd, const c
         return COND_PARAMETRO_INVALIDO;
     }
 
+    /* Nome ja existe: soma se a unidade for a mesma, recusa se for outra */
     for (int i = 0; i < d->totalItens; i++) {
         if (strcmp(d->itens[i].nome, nome) == 0) {
             if (strcmp(d->itens[i].unidade, unidade) == 0) {
@@ -54,6 +58,7 @@ tpCondRet adicionarIngrediente(Despensa* d, const char* nome, float qtd, const c
         return COND_ERRO_MEMORIA;
     }
 
+    /* strncpy + '\0' final: trunca textos maiores que o buffer sem perder o terminador */
     strncpy(d->itens[d->totalItens].nome, nome, MAX_NOME - 1);
     d->itens[d->totalItens].nome[MAX_NOME - 1] = '\0';
     d->itens[d->totalItens].quantidade = qtd;
@@ -71,6 +76,7 @@ tpCondRet removerIngrediente(Despensa* d, const char* nomeBusca) {
 
     for (int i = 0; i < d->totalItens; i++) {
         if (strcmp(d->itens[i].nome, nomeBusca) == 0) {
+            /* Desloca os itens seguintes uma posicao para fechar o buraco */
             for (int j = i; j < d->totalItens - 1; j++) {
                 d->itens[j] = d->itens[j + 1];
             }
@@ -107,6 +113,7 @@ int verificarDisponibilidadeIngrediente(Despensa* d, const char* nome, float qtd
         return 0;
     }
 
+    /* strcmp exato no nome e na unidade: "Ovo" != "ovo" e "kg" != "g" */
     for (int i = 0; i < d->totalItens; i++) {
         if (strcmp(d->itens[i].nome, nome) == 0 && strcmp(d->itens[i].unidade, unidade) == 0) {
             return (d->itens[i].quantidade >= qtdMinima) ? 1 : 0;
@@ -144,6 +151,7 @@ tpCondRet obterIngredientePorIndice(Despensa* d, int indice, char* nomeOut, int 
     return COND_OK;
 }
 
+/* Formato do arquivo: [int totalItens][ItemIngrediente x totalItens] */
 tpCondRet salvarDespensa(Despensa* d, const char* caminhoArquivo) {
     if (d == NULL || caminhoArquivo == NULL) {
         return COND_PARAMETRO_INVALIDO;
@@ -180,6 +188,7 @@ tpCondRet carregarDespensa(Despensa* d, const char* caminhoArquivo) {
         return COND_ERRO_ARQUIVO;
     }
 
+    /* Valida o total lido antes de usar, para nao estourar o array itens[] */
     int totalLido = 0;
     if (fread(&totalLido, sizeof(int), 1, fp) != 1 || totalLido > MAX_ITENS || totalLido < 0) {
         fclose(fp);

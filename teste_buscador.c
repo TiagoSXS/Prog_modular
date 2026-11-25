@@ -1,10 +1,16 @@
+/* Testes unitarios do Buscador, isolados por STUBS: as funcoes de Ingrediente e Receita abaixo sao
+ * versoes FALSAS que substituem as reais. Compilar SO com buscador.c (nao incluir ingrediente.c nem
+ * receita.c, senao da "multiple definition"):
+ *   gcc -Wall -o teste_buscador teste_buscador.c buscador.c
+ * Os ponteiros (Despensa*) 0x1 sao seguros: o Buscador nunca acessa a struct, so repassa aos stubs. */
 #include <stdio.h>
 #include <string.h>
 #include "ingrediente.h"
 #include "receita.h"
 #include "buscador.h"
 
-static int g_stubDisponivel = 0;
+/* Resposta do stub de verificarDisponibilidadeIngrediente: 1 = tem o ingrediente, 0 = nao tem */
+static int g_stubDisponivel = 0; 
 
 int verificarDisponibilidadeIngrediente(Despensa* d, const char* nome, float qtdMinima, const char* unidade) {
     (void)d;
@@ -14,6 +20,7 @@ int verificarDisponibilidadeIngrediente(Despensa* d, const char* nome, float qtd
     return g_stubDisponivel;
 }
 
+/* Catalogo falso: 1 receita ("Omelete") com 1 ingrediente (Ovo, 2 un) */
 int obterTotalReceitas(CatalogoReceitas* cat) {
     (void)cat;
     return 1;
@@ -49,6 +56,7 @@ const char* obterModoPreparoReceita(CatalogoReceitas* cat, int indiceReceita) {
     return "Bater e fritar";
 }
 
+/* TU06: nenhum ingrediente disponivel -> lista vazia */
 static int testar_TU06_ListaVazia(void) {
     Despensa* despensaSimulada = (Despensa*) 0x1;
     CatalogoReceitas* catalogoSimulado = (CatalogoReceitas*) 0x1;
@@ -62,6 +70,7 @@ static int testar_TU06_ListaVazia(void) {
     return passou;
 }
 
+/* TU07: ingrediente disponivel -> a receita "Omelete" e devolvida */
 static int testar_TU07_ReceitaCompativel(void) {
     Despensa* despensaSimulada = (Despensa*) 0x1;
     CatalogoReceitas* catalogoSimulado = (CatalogoReceitas*) 0x1;
@@ -79,6 +88,7 @@ static int testar_TU07_ReceitaCompativel(void) {
     return passou;
 }
 
+/* TU08: despensa e catalogo NULL -> lista vazia, sem travar */
 static int testar_TU08_ParametrosNulos(void) {
     int qtdEncontrada = -1;
     ListaReceitas* lista = buscarReceitasCompativeis(NULL, NULL, &qtdEncontrada);
@@ -88,6 +98,7 @@ static int testar_TU08_ParametrosNulos(void) {
     return passou;
 }
 
+/* So imprime o resultado: o programa retorna 0 mesmo se algum teste falhar */
 int main(void) {
     printf("=== TESTES UNITARIOS ISOLADOS: MODULO BUSCADOR (STUBS) ===\n");
     printf("TU06 - Lista Vazia (Sem printf):  %s\n", testar_TU06_ListaVazia() ? "PASSOU" : "FALHOU");
